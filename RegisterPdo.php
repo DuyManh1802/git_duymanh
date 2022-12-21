@@ -1,22 +1,23 @@
 <?php
     session_start();
-    require('./index.php');
+    require('execute.php');
 
     $error = [];
     if (isset($_POST['register']) && $_POST['register']){
+        $connect = connectDb();
         if (empty($_POST['mail']))
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
         else {
-            $mail = trim($_POST['mail']);
-            $sql = "SELECT COUNT(mail) AS num FROM users WHERE mail = :mail";
-            $stmt = $conn->prepare($sql);
-            $stmt->bindValue(':mail', $mail);
-            $stmt->execute();
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($row['num'] > 0){
-                $error['mail'] = "<span style='color:red;'> Email đã tồn tại.</span>";
-            } else if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/",$mail)) 
+            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/",$mail)){
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
+            } else {
+                $mail = trim($_POST['mail']);
+                $sql = "SELECT COUNT(mail) AS num FROM users WHERE mail = :mail";
+                $row = binValueMail($stmt, $sql, $mail)->fetch(PDO::FETCH_ASSOC);
+                if ($row['num'] > 0){
+                    $error['mail'] = "<span style='color:red;'> Email đã tồn tại.</span>";
+                }
+            } 
         }
 
         if (empty($_POST['name'])){
@@ -37,8 +38,7 @@
 
         if (empty($_POST['address'])){
             $error['address'] = "<span style='color:red;'> Địa chỉ không được để trống.</span>";
-        }
-        else {
+        } else {
             $address = trim($_POST['address']);
         }
 
@@ -62,21 +62,11 @@
 
         if (empty($error)){
             try {
-				$stmt = $conn->prepare('INSERT INTO users (name, mail, password, phone, address) VALUES (:name, :mail, :password, :phone, :address)');
-				$stmt->execute(array(
-					':name' => $name,
-					':mail' => $mail,
-					':password' => $password,
-					':phone' => $phone,
-					':address' => $address,
-					));
-
-                $host  = $_SERVER['HTTP_HOST'];
-                $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                $extra = 'LoginPdo.php';
-                $urlRedirect = "http://".$host.$uri."/".$extra;
+                $sql = "INSERT INTO users (name, mail, password, phone, address) VALUES (:name, :mail, :password, :phone, :address)";
+				$user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address);
+                $Redirect = url('LoginPdo.php');
                 ob_start();
-                echo '<script language="javascript">window.location.href ="'.$urlRedirect.'"</script>';
+                echo '<script language="javascript">window.location.href ="'.$Redirect.'"</script>';
                 ob_end_flush();
 				exit;
 			} catch (PDOException $e) {

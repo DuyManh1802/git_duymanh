@@ -1,18 +1,16 @@
 <?php
     session_start();
-    require('index.php');
+    require('execute.php');
 
     if (isset($_POST['submit']) && $_POST['submit']){
+        $connect = connectDb();
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
         } else {
             $mail = trim($_POST['mail']);
             $pass = trim($_POST['password']);
-            // $remember = ((isset($_POST['remember'])!=0)?1:"");
             $sql = "SELECT*FROM users WHERE mail = :mail";
-            $stmt = $conn->prepare($sql);
-            $stmt->execute(array(':mail'=>$mail));
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address)->fetch(PDO::FETCH_ASSOC);
             if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)) 
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
             else {
@@ -30,20 +28,15 @@
                             setcookie('cookie_password', '');
                         }
                     }
-                    // header('Location:LoginSuccessPdo.php ');
                     echo "<script type='text/javascript'>alert('Đăng nhập thành công.');</script>";
-                    $host  = $_SERVER['HTTP_HOST'];
-                    $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-                    $extra = 'LoginSuccessPdo.php';
-                    $urlRedirect = "http://".$host.$uri."/".$extra;
+                    $Redirect = url('LoginSuccessPdo.php');
                     ob_start();
-                    echo '<script language="javascript">window.location.href ="'.$urlRedirect.'"</script>';
+                    echo '<script language="javascript">window.location.href ="'.$Redirect.'"</script>';
                     ob_end_flush();
                     exit;
                 } else {
                     $error[] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
                     echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
-                    // header('Location:LoginPdo.php ');
                 }
             }
         }
@@ -68,7 +61,7 @@
 
 <body>
     <div class="container">
-    <?php 
+        <?php 
 		if(isset($error) && count($error) > 0){
 			foreach ($error as $error_msg){
 				echo '<div class="alert alert-danger">'.$error_msg.'</div>';
@@ -101,7 +94,8 @@
                 <div class="col d-flex justify-content-center">
                     <!-- Checkbox -->
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="form2Example31" checked name="remember" />
+                        <input class="form-check-input" type="checkbox" value="" id="form2Example31" checked
+                            name="remember" />
                         <label class="form-check-label" for="form2Example31"> Remember me </label>
                     </div>
                 </div>
