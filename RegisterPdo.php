@@ -2,18 +2,21 @@
     session_start();
     require('execute.php');
 
-    $error = [];
     if (isset($_POST['register']) && $_POST['register']){
         $connect = connectDb();
-        if (empty($_POST['mail']))
+        $error = [];
+
+        if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
+        }
         else {
-            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/",$mail)){
+            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)){
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
             } else {
                 $mail = trim($_POST['mail']);
                 $sql = "SELECT COUNT(mail) AS num FROM users WHERE mail = :mail";
                 $row = binValueMail($stmt, $sql, $mail)->fetch(PDO::FETCH_ASSOC);
+
                 if ($row['num'] > 0){
                     $error['mail'] = "<span style='color:red;'> Email đã tồn tại.</span>";
                 }
@@ -24,16 +27,20 @@
             $error['name'] = "<span style='color:red;'> Tên không được để trống.</span>";
         } else {
             $name = trim($_POST['name']);
-            if (!preg_match("/^[a-zA-Z0-9._]{6,200}$/",$name)) 
+
+            if (!preg_match("/^[a-zA-Z0-9._]{6,200}$/",$name)){
                 $error['name'] = "<span style='color:red;'> Tên nhập chưa đúng định dạng.</span>";
+            } 
         }
 
         if (empty($_POST['phone'])){
             $error['phone'] = "<span style='color:red;'> Số điện thoại không được để trống.</span>";
         } else {
             $phone = trim($_POST['phone']);
-            if (!preg_match("/^[0-9]{10,20}$/",$phone)) 
+
+            if (!preg_match("/^[0-9]{10,20}$/",$phone)){
                 $error['phone'] = "<span style='color:red;'> Số điện thoại nhập chưa đúng định dạng.</span>";
+            } 
         }
 
         if (empty($_POST['address'])){
@@ -46,28 +53,28 @@
             $error['password'] = "<span style='color:red;'> Mật khẩu không được để trống.</span>";
         }
         else {
-            if (!preg_match("/^[a-zA-Z0-9._]{6,100}$/", $_POST['password'])) 
+            if (!preg_match("/^[a-zA-Z0-9._]{6,100}$/", $_POST['password'])){
                 $error['password'] = "<span style='color:red;'> Mật khẩu nhập chưa đúng định dạng.</span>";
+            } 
+
             $password = trim(password_hash($_POST["password"], PASSWORD_BCRYPT));
         }
 
         if (empty($_POST['confirm_password'])){
             $error['confirm_password'] = "<span style='color:red;'> Xác nhận mật khẩu không được để trống.</span>";
         } else {
-            if ($_POST['password'] === $_POST['confirm_password']) 
+            if ($_POST['password'] === $_POST['confirm_password']){
                 $confirm_password = trim($_POST['confirm_password']);
-            else    
+            } else {
                 $error['confirm_password'] = "<span style='color:red;'> Mật khẩu và xác nhận mật khẩu không khớp.</span>";
+            }   
         }
 
         if (empty($error)){
             try {
                 $sql = "INSERT INTO users (name, mail, password, phone, address) VALUES (:name, :mail, :password, :phone, :address)";
 				$user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address);
-                $Redirect = url('LoginPdo.php');
-                ob_start();
-                echo '<script language="javascript">window.location.href ="'.$Redirect.'"</script>';
-                ob_end_flush();
+                url('LoginPdo.php');
 				exit;
 			} catch (PDOException $e) {
 				echo $e->getMessage();

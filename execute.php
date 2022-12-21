@@ -1,4 +1,9 @@
 <?php 
+    const SERVERNAME = 'db';
+    const USERNAME = 'laravel';
+    const DBPASSWORD = 'secret';
+    const DBNAME = 'manhpdo';
+    
     function executeSql($stmt, $sql, $name, $mail, $password, $phone, $address)
     {
         $stmt->prepare($sql);
@@ -25,17 +30,15 @@
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
         $urlRedirect = "http://".$host.$uri."/".$url;
-        return $urlRedirect;
+        ob_start();
+        echo '<script language="javascript">window.location.href ="'.$urlRedirect.'"</script>';
+        ob_end_flush();
     }
+    
     function connectDb()
     {
-        $servername = "db";
-        $username = "laravel";
-        $dbpassword = "secret";
-        $dbname = "manhpdo";
-
         try {
-            $conn = new PDO("mysql:host=$servername; dbname=$dbname", $username, $dbpassword);
+            $conn = new PDO("mysql:host=SERVERNAME; dbname=DBNAME", USERNAME, DBPASSWORD);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch(PDOException $e) {
             die("Lỗi connect db : ". $e->getMessage());
@@ -44,18 +47,13 @@
 
     function createSql($sql)
     {
-        $servername = "db";
-        $username = "laravel";
-        $dbpassword = "secret";
-        $dbname = "manhpdo";
-        
         try {
-        $conn = new PDO("mysql:host=$servername;dbname=$dbname", $username, $dbpassword);
-        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $conn->exec($sql);
-        echo "Insert successfully";
+            $conn = new PDO("mysql:host=SERVERNAME; dbname=DBNAME", USERNAME, DBPASSWORD);
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->exec($sql);
+            echo "Insert successfully";
         } catch(PDOException $e) {
-        echo "<br>" . $e->getMessage();
+            echo "<br>" . $e->getMessage();
         }
     }
 ?>

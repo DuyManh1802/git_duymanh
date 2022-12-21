@@ -4,40 +4,53 @@
 
     if (isset($_POST['submit']) && $_POST['submit']){
         $connect = connectDb();
+        $error = [];
+
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
         } else {
+            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)){
+                $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
+            } 
+        }
+
+        if (empty($_POST['password'])){
+            $error['password'] = "<span style='color:red;'> Mật khẩu không được để trống.</span>";
+        }
+        else {
+            if (!preg_match("/^[a-zA-Z0-9._]{6,100}$/", $_POST['password'])){
+                $error['password'] = "<span style='color:red;'> Mật khẩu nhập chưa đúng định dạng.</span>";
+            } 
+        }
+
+        if (empty($error)) {
             $mail = trim($_POST['mail']);
             $pass = trim($_POST['password']);
             $sql = "SELECT*FROM users WHERE mail = :mail";
             $user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address)->fetch(PDO::FETCH_ASSOC);
-            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)) 
-                $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
-            else {
-                $validPassword = password_verify($pass, $user['password']);
-                if ($mail == $user['mail'] && $pass ==  $validPassword){
-                    $_SESSION['mail'] = $user['mail'];
-                    if (isset($_POST['remember']) && $_POST['remember']){
-                        setcookie('cookie_mail', $_POST['mail'], time() + (3600*24*7));
-                        setcookie('cookie_password', $_POST['password'], time() + (3600*24*7));
-                    } else {
-                        if (isset($_COOKIE['mail'])){
-                            setcookie('cookie_mail', '');
-                        }
-                        if (isset($_COOKIE['password'])){
-                            setcookie('cookie_password', '');
-                        }
-                    }
-                    echo "<script type='text/javascript'>alert('Đăng nhập thành công.');</script>";
-                    $Redirect = url('LoginSuccessPdo.php');
-                    ob_start();
-                    echo '<script language="javascript">window.location.href ="'.$Redirect.'"</script>';
-                    ob_end_flush();
-                    exit;
+            $validPassword = password_verify($pass, $user['password']);
+
+            if ($mail === $user['mail'] && $pass ===  $validPassword){
+                $_SESSION['mail'] = $user['mail'];
+
+                if (isset($_POST['remember']) && $_POST['remember']){
+                    setcookie('cookie_mail', $_POST['mail'], time() + (3600*24*7));
+                    setcookie('cookie_password', $_POST['password'], time() + (3600*24*7));
                 } else {
-                    $error[] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
-                    echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
+                    if (isset($_COOKIE['mail'])){
+                        setcookie('cookie_mail', '');
+                    }
+                    if (isset($_COOKIE['password'])){
+                        setcookie('cookie_password', '');
+                    }
                 }
+
+                echo "<script type='text/javascript'>alert('Đăng nhập thành công.');</script>";
+                url('LoginSuccessPdo.php');
+                exit;
+            } else {
+                $error['login'] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
+                echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
             }
         }
     }
@@ -62,16 +75,16 @@
 <body>
     <div class="container">
         <?php 
-		if(isset($error) && count($error) > 0){
-			foreach ($error as $error_msg){
-				echo '<div class="alert alert-danger">'.$error_msg.'</div>';
-			}
-        }
-                
-        if (isset($success)){
-            echo '<div class="alert alert-success">'.$success.'</div>';
-        }
-	?>
+            if (isset($error['login']) && count($error['login']) > 0){
+                foreach ($error as $error_msg){
+                    echo '<div class="alert alert-danger">'.$error_msg.'</div>';
+                }
+            }
+                    
+            if (isset($success)){
+                echo '<div class="alert alert-success">'.$success.'</div>';
+            }
+	    ?>
         <div class="panel-heading">
             <h3 class="panel-title">Sign In</h3>
         </div>
@@ -81,12 +94,14 @@
             <div class="form-outline mb-4">
                 <label class="form-label" for="form2Example1">Email address</label>
                 <input type="email" id="form2Example1" class="form-control" name="mail" />
+                <?php echo $error['mail'] ?>
             </div>
 
             <!-- Password input -->
             <div class="form-outline mb-4">
                 <label class="form-label" for="form2Example2">Password</label>
                 <input type="password" id="form2Example2" class="form-control" name="password" />
+                <?php echo $error['password'] ?>
             </div>
 
             <!-- 2 column grid layout for inline styling -->
