@@ -5,37 +5,30 @@
     if (isset($_POST['submit']) && $_POST['submit']){
         $connect = connectDb();
         $error = [];
+        $mail = trim($_POST['mail']);
+        $sql = "SELECT *FROM users WHERE mail = :mail";
+        $user = binValueMail($sql, $mail)->fetch(PDO::FETCH_ASSOC);
+        $validPassword = password_verify(trim($_POST['password']), $user['password']);
 
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
         } else {
-            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)){
+            if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", trim($_POST['mail']))){
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
             } 
         }
 
         if (empty($_POST['password'])){
             $error['password'] = "<span style='color:red;'> Mật khẩu không được để trống.</span>";
-        }
-        else {
-            if (!preg_match("/^[a-zA-Z0-9._]{6,100}$/", $_POST['password'])){
-                $error['password'] = "<span style='color:red;'> Mật khẩu nhập chưa đúng định dạng.</span>";
-            } 
-        }
+        } 
 
-        if (empty($error)) {
-            $mail = trim($_POST['mail']);
-            $pass = trim($_POST['password']);
-            $sql = "SELECT*FROM users WHERE mail = :mail";
-            $user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address)->fetch(PDO::FETCH_ASSOC);
-            $validPassword = password_verify($pass, $user['password']);
-
-            if ($mail === $user['mail'] && $pass ===  $validPassword){
+        if (empty($error)){
+            if (trim($_POST['mail']) === $user['mail'] && $validPassword){
                 $_SESSION['mail'] = $user['mail'];
 
                 if (isset($_POST['remember']) && $_POST['remember']){
-                    setcookie('cookie_mail', $_POST['mail'], time() + (3600*24*7));
-                    setcookie('cookie_password', $_POST['password'], time() + (3600*24*7));
+                    setcookie('cookie_mail', $mail, time() + (3600*24*7));
+                    setcookie('cookie_password', $pass, time() + (3600*24*7));
                 } else {
                     if (isset($_COOKIE['mail'])){
                         setcookie('cookie_mail', '');
@@ -48,10 +41,10 @@
                 echo "<script type='text/javascript'>alert('Đăng nhập thành công.');</script>";
                 url('LoginSuccessPdo.php');
                 exit;
-            } else {
-                $error['login'] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
-                echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
-            }
+            } 
+        } else {
+            $error['login'] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
+            echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
         }
     }
 ?>
@@ -74,17 +67,12 @@
 
 <body>
     <div class="container">
-        <?php 
-            if (isset($error['login']) && count($error['login']) > 0){
-                foreach ($error as $error_msg){
-                    echo '<div class="alert alert-danger">'.$error_msg.'</div>';
-                }
-            }
-                    
+        <?php     
             if (isset($success)){
                 echo '<div class="alert alert-success">'.$success.'</div>';
             }
 	    ?>
+
         <div class="panel-heading">
             <h3 class="panel-title">Sign In</h3>
         </div>

@@ -4,18 +4,20 @@
 
     if (isset($_POST['register']) && $_POST['register']){
         $connect = connectDb();
+        $mail = trim($_POST['mail']);
+        $password = trim(password_hash($_POST["password"], PASSWORD_BCRYPT));
+        $name = trim($_POST['name']);
+        $phone = trim($_POST['phone']);
         $error = [];
 
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
-        }
-        else {
+        } else {
             if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)){
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
             } else {
-                $mail = trim($_POST['mail']);
                 $sql = "SELECT COUNT(mail) AS num FROM users WHERE mail = :mail";
-                $row = binValueMail($stmt, $sql, $mail)->fetch(PDO::FETCH_ASSOC);
+                $row = binValueMail($sql, $mail)->fetch(PDO::FETCH_ASSOC);
 
                 if ($row['num'] > 0){
                     $error['mail'] = "<span style='color:red;'> Email đã tồn tại.</span>";
@@ -26,9 +28,7 @@
         if (empty($_POST['name'])){
             $error['name'] = "<span style='color:red;'> Tên không được để trống.</span>";
         } else {
-            $name = trim($_POST['name']);
-
-            if (!preg_match("/^[a-zA-Z0-9._]{6,200}$/",$name)){
+            if (!preg_match("/^[a-zA-Z0-9._]{6,200}$/", $name)){
                 $error['name'] = "<span style='color:red;'> Tên nhập chưa đúng định dạng.</span>";
             } 
         }
@@ -36,9 +36,7 @@
         if (empty($_POST['phone'])){
             $error['phone'] = "<span style='color:red;'> Số điện thoại không được để trống.</span>";
         } else {
-            $phone = trim($_POST['phone']);
-
-            if (!preg_match("/^[0-9]{10,20}$/",$phone)){
+            if (!preg_match("/^[0-9]{10,20}$/", $phone)){
                 $error['phone'] = "<span style='color:red;'> Số điện thoại nhập chưa đúng định dạng.</span>";
             } 
         }
@@ -56,8 +54,6 @@
             if (!preg_match("/^[a-zA-Z0-9._]{6,100}$/", $_POST['password'])){
                 $error['password'] = "<span style='color:red;'> Mật khẩu nhập chưa đúng định dạng.</span>";
             } 
-
-            $password = trim(password_hash($_POST["password"], PASSWORD_BCRYPT));
         }
 
         if (empty($_POST['confirm_password'])){
@@ -73,7 +69,7 @@
         if (empty($error)){
             try {
                 $sql = "INSERT INTO users (name, mail, password, phone, address) VALUES (:name, :mail, :password, :phone, :address)";
-				$user = executeSql($stmt, $sql, $name, $mail, $password, $phone, $address);
+				$user = execSql($sql, $mail, $password);
                 url('LoginPdo.php');
 				exit;
 			} catch (PDOException $e) {

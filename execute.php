@@ -1,25 +1,27 @@
 <?php 
-    const SERVERNAME = 'db';
-    const USERNAME = 'laravel';
-    const DBPASSWORD = 'secret';
-    const DBNAME = 'manhpdo';
-    
-    function executeSql($stmt, $sql, $name, $mail, $password, $phone, $address)
+    define('SERVERNAME', 'db');
+    define('USERNAME', 'laravel');
+    define('DBPASSWORD', 'secret');
+    define('DBNAME', 'manhpdo');
+
+    $conn = new PDO("mysql:host=".SERVERNAME."; dbname=".DBNAME, USERNAME, DBPASSWORD);
+
+    function execSql($sql,  $mail, $password)
     {
-        $stmt->prepare($sql);
+        $stmt = $GLOBALS['conn']->prepare($sql);
         $stmt->execute(array(
-            ':name' => $name,
+            ':name' => $_POST['name'],
             ':mail' => $mail,
             ':password' => $password,
-            ':phone' => $phone,
-            ':address' => $address,
+            ':phone' => $_POST['phone'],
+            ':address' => $_POST['address'],
             ));
-        return $stmt;
     }
 
-    function binValueMail($stmt, $sql, $mail)
+    function binValueMail($sql, $mail)
     {
-        $stmt->prepare($sql);
+        
+        $stmt = $GLOBALS['conn']->prepare($sql);
         $stmt->bindValue(':mail', $mail);
         $stmt->execute();
         return $stmt;
@@ -34,12 +36,10 @@
         echo '<script language="javascript">window.location.href ="'.$urlRedirect.'"</script>';
         ob_end_flush();
     }
-    
     function connectDb()
     {
         try {
-            $conn = new PDO("mysql:host=SERVERNAME; dbname=DBNAME", USERNAME, DBPASSWORD);
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $GLOBALS['conn']->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch(PDOException $e) {
             die("Lỗi connect db : ". $e->getMessage());
         }
@@ -48,9 +48,8 @@
     function createSql($sql)
     {
         try {
-            $conn = new PDO("mysql:host=SERVERNAME; dbname=DBNAME", USERNAME, DBPASSWORD);
-            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $conn->exec($sql);
+            $GLOBALS['conn']->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $GLOBALS['conn']->exec($sql);
             echo "Insert successfully";
         } catch(PDOException $e) {
             echo "<br>" . $e->getMessage();
