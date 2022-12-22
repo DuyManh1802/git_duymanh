@@ -3,6 +3,6 @@
     require('execute.php');
 
     unset($_SESSION['mail']);
-    url('LoginPdo.php');
+    urlRedirect('LoginPdo.php');
     exit;
 ?>

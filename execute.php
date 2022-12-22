@@ -6,28 +6,14 @@
 
     $conn = new PDO("mysql:host=".SERVERNAME."; dbname=".DBNAME, USERNAME, DBPASSWORD);
 
-    function execSql($sql,  $mail, $password)
+    function execSql($sql)
     {
         $stmt = $GLOBALS['conn']->prepare($sql);
-        $stmt->execute(array(
-            ':name' => $_POST['name'],
-            ':mail' => $mail,
-            ':password' => $password,
-            ':phone' => $_POST['phone'],
-            ':address' => $_POST['address'],
-            ));
-    }
-
-    function binValueMail($sql, $mail)
-    {
-        
-        $stmt = $GLOBALS['conn']->prepare($sql);
-        $stmt->bindValue(':mail', $mail);
         $stmt->execute();
         return $stmt;
     }
 
-    function url($url)
+    function urlRedirect($url)
     {
         $host  = $_SERVER['HTTP_HOST'];
         $uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
@@ -48,8 +34,7 @@
     function createSql($sql)
     {
         try {
-            $GLOBALS['conn']->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $GLOBALS['conn']->exec($sql);
+            execSql($sql);
             echo "Insert successfully";
         } catch(PDOException $e) {
             echo "<br>" . $e->getMessage();

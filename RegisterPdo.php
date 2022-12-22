@@ -3,23 +3,21 @@
     require('execute.php');
 
     if (isset($_POST['register']) && $_POST['register']){
-        $connect = connectDb();
-        $mail = trim($_POST['mail']);
-        $password = trim(password_hash($_POST["password"], PASSWORD_BCRYPT));
-        $name = trim($_POST['name']);
-        $phone = trim($_POST['phone']);
+        $mail = $_POST['mail'];
+        $password = $_POST["password"];
+        $name = $_POST['name'];
+        $phone = $_POST['phone'];
         $error = [];
-
+            
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
         } else {
             if (!preg_match("/^[a-zA-Z0-9._]+@[a-zA-Z0-9-]+\.[a-zA-Z.].{0,255}$/", $mail)){
                 $error['mail'] = "<span style='color:red;'> Email nhập chưa đúng định dạng.</span>";
             } else {
-                $sql = "SELECT COUNT(mail) AS num FROM users WHERE mail = :mail";
-                $row = binValueMail($sql, $mail)->fetch(PDO::FETCH_ASSOC);
-
-                if ($row['num'] > 0){
+                $sql = "SELECT name, mail, password, phone, address FROM users WHERE mail = '$mail'";
+                $row = execSql($sql)->fetch(PDO::FETCH_ASSOC);
+                if ( $mail === $row['mail']){
                     $error['mail'] = "<span style='color:red;'> Email đã tồn tại.</span>";
                 }
             } 
@@ -67,10 +65,11 @@
         }
 
         if (empty($error)){
+            $password = trim(password_hash($_POST["password"], PASSWORD_BCRYPT));
             try {
-                $sql = "INSERT INTO users (name, mail, password, phone, address) VALUES (:name, :mail, :password, :phone, :address)";
-				$user = execSql($sql, $mail, $password);
-                url('LoginPdo.php');
+                $sql = "INSERT INTO users (name, mail, password, phone, address) VALUES ('$name', '$mail', '$password', '$phone', '$address')";
+				$user = execSql($sql);
+                urlRedirect('LoginPdo.php');
 				exit;
 			} catch (PDOException $e) {
 				echo $e->getMessage();

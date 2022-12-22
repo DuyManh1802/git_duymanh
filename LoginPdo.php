@@ -1,14 +1,9 @@
 <?php
     session_start();
     require('execute.php');
-
+    
     if (isset($_POST['submit']) && $_POST['submit']){
-        $connect = connectDb();
         $error = [];
-        $mail = trim($_POST['mail']);
-        $sql = "SELECT *FROM users WHERE mail = :mail";
-        $user = binValueMail($sql, $mail)->fetch(PDO::FETCH_ASSOC);
-        $validPassword = password_verify(trim($_POST['password']), $user['password']);
 
         if (empty($_POST['mail'])){
             $error['mail'] = "<span style='color:red;'> Email không được để trống.</span>";
@@ -23,6 +18,12 @@
         } 
 
         if (empty($error)){
+            $mail = trim($_POST['mail']);
+            $pass = trim($_POST['password']);
+            $sql = "SELECT *FROM users WHERE mail = '$mail'";
+            $user = execSql($sql)->fetch(PDO::FETCH_ASSOC);
+            $validPassword = password_verify($pass, $user['password']);
+
             if (trim($_POST['mail']) === $user['mail'] && $validPassword){
                 $_SESSION['mail'] = $user['mail'];
 
@@ -39,13 +40,12 @@
                 }
 
                 echo "<script type='text/javascript'>alert('Đăng nhập thành công.');</script>";
-                url('LoginSuccessPdo.php');
+                urlRedirect('LoginSuccessPdo.php');
                 exit;
-            } 
-        } else {
-            $error['login'] = "<span style='color:red;'> Email hoặc mật khẩu không chinh xác.</span>";
-            echo "<script type='text/javascript'>alert('Đăng nhập thất bại.');</script>";
-        }
+            } else {
+                echo "<script type='text/javascript'>alert('Đăng nhập thất bại. Email hoặc mật khẩu không chinh xác');</script>";
+            }
+        } 
     }
 ?>
 
@@ -97,8 +97,7 @@
                 <div class="col d-flex justify-content-center">
                     <!-- Checkbox -->
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="" id="form2Example31" checked
-                            name="remember" />
+                        <input class="form-check-input" type="checkbox" value="" checked name="remember" />
                         <label class="form-check-label" for="form2Example31"> Remember me </label>
                     </div>
                 </div>
