@@ -1,0 +1,48 @@
+version: "3.1"
+services:
+  php:
+    build:
+      context: ./
+      dockerfile: php.Dockerfile
+    container_name: laravel-basic-php
+    volumes:
+      - ./:/var/www/html
+
+  webserver:
+    image: nginx:1.17.10
+    container_name: laravel-basic-nginx
+    links:
+      - php:fpm
+    environment:
+      - FPM_HOST=fpm
+      - FPM_PORT=9000
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx_conf:/etc/nginx/conf.d/
+    ports:
+      - "8080:80"
+
+  db:
+    platform: linux/x86_64
+    image: mysql:5.7
+    container_name: laravel-basic-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: manhpdo
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: secret
+    # volumes:
+    #   - dbdata:/var/lib/mysql/
+    #   - ./mysql/my.cnf:/etc/mysql/my.cnf
+    ports:
+      - 3307:3306
+    # networks:
+    #   - app-network
+
+    # networks:
+    #   app-network:
+    #     driver: bridge
+
+    # volumes:
+    #   dbdata:
+    #     driver: local
